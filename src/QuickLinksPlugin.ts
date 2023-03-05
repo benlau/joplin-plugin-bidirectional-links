@@ -7,6 +7,8 @@ interface Hint {
 	render?: Function;
 }
 
+const MAGIC_WORD = '|||';
+
 module.exports = {
 	default: function(context: any) {
 
@@ -20,7 +22,7 @@ module.exports = {
 				text: prefix,
 				hint: async (cm, data, completion) => {
 					const from = completion.from || data.from;
-					from.ch -= 2;
+					from.ch -= MAGIC_WORD.length;
 
 					const response = await context.postMessage({command: 'createNote', title: prefix, todo: todo});
 					cm.replaceRange(`[${prefix}](:/${response.newNote.id})`, from, cm.getCursor(), "complete");
@@ -51,7 +53,7 @@ module.exports = {
                     text: note.title,
                     hint: async (cm: Editor, data, completion) => {
                         const from = completion.from || data.from;
-                        from.ch -= 2;
+                        from.ch -= MAGIC_WORD.length;
                         cm.replaceRange(`[${note.title}](:/${note.id})`, from, cm.getCursor(), "complete");
 						if (response.selectText) {
 							const selectionStart = Object.assign({}, from);
@@ -94,7 +96,7 @@ module.exports = {
 				if (!value) return;
 
 				cm.on('inputRead', async function (cm1, change) {
-                    if (!cm1.state.completionActive && cm.getTokenAt(cm.getCursor()).string === '|||') {
+                    if (!cm1.state.completionActive && cm.getTokenAt(cm.getCursor()).string === MAGIC_WORD) {
                         const start = {line: change.from.line, ch: change.from.ch + 1};
 
 						const hint = function(cm, callback) {

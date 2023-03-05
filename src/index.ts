@@ -123,6 +123,18 @@ async function initSettings() {
 	});
 }
 
+async function appendLink(targetNoteId: string) {
+	const activeNote = await joplin.workspace.selectedNote();
+
+	const note = await joplin.data.get(['notes', targetNoteId], {
+		fields: ["id", "body"],
+	});
+
+	const link = `[${activeNote.title}](:/${activeNote.id})`;
+	const newBody = note.body + "\n" + link;
+	await joplin.data.put(['notes', targetNoteId], null, {body: newBody});
+}
+
 joplin.plugins.register({
 	onStart: async function() {
 		await initSettings();
@@ -163,21 +175,13 @@ joplin.plugins.register({
 						title: message.title,
 						parent_id: activeNotesFolder.id
 					});
-
+				await appendLink(newNote.id);
 				return {newNote: newNote};
 			}
 			else if (message.command === 'appendLink')
 			{
-				const activeNote = await joplin.workspace.selectedNote();
 				const {targetNoteId} = message;
-
-				const note = await joplin.data.get(['notes', targetNoteId], {
-					fields: ["id", "body"],
-				});
-
-				const link = `[${activeNote.title}](:/${activeNote.id})`;
-				const newBody = note.body + "\n" + link;
-				await joplin.data.put(['notes', targetNoteId], null, {body: newBody});
+				await appendLink(targetNoteId);
 			}
 		});
 	}
