@@ -166,6 +166,19 @@ joplin.plugins.register({
 
 				return {newNote: newNote};
 			}
+			else if (message.command === 'appendLink')
+			{
+				const activeNote = await joplin.workspace.selectedNote();
+				const {targetNoteId} = message;
+
+				const note = await joplin.data.get(['notes', targetNoteId], {
+					fields: ["id", "body"],
+				});
+
+				const link = `[${activeNote.title}](:/${activeNote.id})`;
+				const newBody = note.body + "\n" + link;
+				await joplin.data.put(['notes', targetNoteId], null, {body: newBody});
+			}
 		});
 	}
 });

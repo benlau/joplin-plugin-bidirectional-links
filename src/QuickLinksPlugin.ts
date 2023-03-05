@@ -60,6 +60,8 @@ module.exports = {
 							selectionEnd.ch += 1 + note.title.length;
 							cm.setSelection(selectionStart, selectionEnd)
 						}
+						await context.postMessage(
+							{command: 'appendLink', targetNoteId: note.id});
 					},
 				};
 				if (response.showFolders) {
@@ -92,7 +94,7 @@ module.exports = {
 				if (!value) return;
 
 				cm.on('inputRead', async function (cm1, change) {
-                    if (!cm1.state.completionActive && cm.getTokenAt(cm.getCursor()).string === '@@') {
+                    if (!cm1.state.completionActive && cm.getTokenAt(cm.getCursor()).string === '|||') {
                         const start = {line: change.from.line, ch: change.from.ch + 1};
 
 						const hint = function(cm, callback) {
