@@ -69,11 +69,11 @@ async function getFolders() {
 }
 
 async function initSettings() {
-	const SECTION = 'QuickLinks';
+	const SECTION = 'BidirectionalLinks';
 
 	await joplin.settings.registerSection(SECTION, {
-		description: 'Quick Links Plugin Settings',
-		label: 'Quick Links',
+		description: 'Bidirectional Links Plugin Settings',
+		label: 'Bidirectional Links',
 		iconName: 'fas fa-link'
 	});
 
