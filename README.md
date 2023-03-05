@@ -1,16 +1,16 @@
-# Quick Links Plugin for Joplin 
+# Bidirectional Links Plugin for Joplin 
 
-This Plugin for the note taking app [Joplin](https://joplinapp.org/) gives you a quicker way to add Links to other notes.
+This plugin is designed for Joplin, a note-taking app, and allows users to easily create bidirectional links between notes. This project is a fork of the [Quick Links](https://github.com/roman-r-m/joplin-plugin-quick-links) Plugin project.
 
-**The plugin is working only in the Markdown editor. The WYSIWG editor is not supported**
+Please note that this plugin is currently only supported in the Markdown editor and is not compatible with the WYSIWYG editor.
 
 ## How to use
 
-Type `@@` anywhere in your note and select the note to link in the drop down menu.
+To create a bidirectional link between notes, simply type `|||` anywhere within your note and select the desired note from the dropdown menu. This will insert a link to the selected note at the current cursor position, as well as append a link to the current note within the target note, thereby creating a bidirectional link.
 
 ## How to install
 
-From Joplin desktop open Options - Plugins, search for "quick links" and install.
+From Joplin desktop open Options - Plugins, search for "bidirectional links" and install.
 
 
 # Developing on the plugin
