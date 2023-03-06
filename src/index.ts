@@ -141,11 +141,11 @@ joplin.plugins.register({
 
 		await joplin.contentScripts.register(
 			ContentScriptType.CodeMirrorPlugin,
-			'quickLinks',
-			'./QuickLinksPlugin.js'
+			'bidirectionalLinks',
+			'./BidirectionalLinksPlugin.js'
 		);
 
-		await joplin.contentScripts.onMessage('quickLinks', async (message: any) => {
+		await joplin.contentScripts.onMessage('bidirectionalLinks', async (message: any) => {
 			const selectedNoteIds = await joplin.workspace.selectedNoteIds();
 			const noteId = selectedNoteIds[0];
 			if (message.command === 'getNotes') {
