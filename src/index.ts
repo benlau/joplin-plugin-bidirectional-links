@@ -6,10 +6,12 @@ const FOLDERS_REFRESH_INTERVAL = 60000;
 const SETTING_SHOW_FOLDERS = 'showFolders';
 const SETTING_ALLOW_NEW_NOTES = 'allowNewNotes';
 const SETTING_SELECT_TEXT = 'selectText';
+const SETTING_PREPEND_LINK = "prependLink";
 
 let showFolders = false;
 let allowNewNotes = false;
 let selectText = false;
+let prependLink = false;
 let folders = {};
 
 async function onShowFolderSettingChanged() {
@@ -25,6 +27,10 @@ async function onAllowNewNotesSettingChanged() {
 
 async function onSelectTextSettingChanged() {
 	selectText = await joplin.settings.value(SETTING_SELECT_TEXT);
+}
+
+async function onPrependLinkSettingChanged() {
+	prependLink = await joplin.settings.value(SETTING_PREPEND_LINK)
 }
 
 async function refreshFolderList() {
@@ -98,7 +104,14 @@ async function initSettings() {
 			type: SettingItemType.Bool,
 			value: selectText,
 			label: 'Select link text after inserting',
-		}		
+		},
+		[SETTING_PREPEND_LINK]: {
+			public: true,
+			section: SECTION,
+			type: SettingItemType.Bool,
+			value: prependLink,
+			label: 'Prepend link instead of append',
+		}
 	});
 
 	await onShowFolderSettingChanged();
@@ -106,6 +119,7 @@ async function initSettings() {
 	await onAllowNewNotesSettingChanged();
 	await onAllowNewNotesSettingChanged();
 	await onSelectTextSettingChanged();
+	await onPrependLinkSettingChanged(); 
 
 	await joplin.settings.onChange(change => {
 		const showFoldersIdx = change.keys.indexOf(SETTING_SHOW_FOLDERS);
@@ -119,11 +133,15 @@ async function initSettings() {
 		const selectTextIdx = change.keys.indexOf(SETTING_SELECT_TEXT);
 		if (selectTextIdx >= 0) {
 			onSelectTextSettingChanged();
-		}		
+		}
+		const prependLinkIdx = change.keys.indexOf(SETTING_PREPEND_LINK);
+		if (prependLinkIdx >= 0) {
+			onPrependLinkSettingChanged();
+		}
 	});
 }
 
-async function appendLink(targetNoteId: string) {
+async function insertLink(targetNoteId: string) {
 	const activeNote = await joplin.workspace.selectedNote();
 
 	const note = await joplin.data.get(['notes', targetNoteId], {
@@ -131,7 +149,7 @@ async function appendLink(targetNoteId: string) {
 	});
 
 	const link = `[${activeNote.title}](:/${activeNote.id})`;
-	const newBody = note.body + "\n" + link;
+	const newBody = prependLink ? link + "\n" + note.body : note.body + "\n" + link;
 	await joplin.data.put(['notes', targetNoteId], null, {body: newBody});
 }
 
@@ -175,13 +193,13 @@ joplin.plugins.register({
 						title: message.title,
 						parent_id: activeNotesFolder.id
 					});
-				await appendLink(newNote.id);
+				await insertLink(newNote.id);
 				return {newNote: newNote};
 			}
 			else if (message.command === 'appendLink')
 			{
 				const {targetNoteId} = message;
-				await appendLink(targetNoteId);
+				await insertLink(targetNoteId);
 			}
 		});
 	}
