@@ -8,6 +8,8 @@ interface Hint {
 	render?: Function;
 }
 
+const MAGIC_WORD = '|||';
+
 export default function codeMirror5Plugin(context: PluginContext, CodeMirror: any) {
 	function NewNoteHint(prefix: string, todo: boolean) {
 		let description = "New Note";
@@ -19,7 +21,7 @@ export default function codeMirror5Plugin(context: PluginContext, CodeMirror: an
 			text: prefix,
 			hint: async (cm: Editor, data, completion) => {
 				const from = completion.from || data.from;
-				from.ch -= 2;
+				from.ch -= MAGIC_WORD.length;
 
 				const response = await context.postMessage({command: 'createNote', title: prefix, todo: todo});
 				cm.replaceRange(`[${prefix}](:/${response.newNote.id})`, from, cm.getCursor(), "complete");
@@ -50,7 +52,7 @@ export default function codeMirror5Plugin(context: PluginContext, CodeMirror: an
 				text: note.title,
 				hint: async (cm: Editor, data, completion) => {
 					const from = completion.from || data.from;
-					from.ch -= 2;
+					from.ch -= MAGIC_WORD.length;
 					cm.replaceRange(`[${note.title}](:/${note.id})`, from, cm.getCursor(), "complete");
 					if (response.selectText) {
 						const selectionStart = Object.assign({}, from);
@@ -59,6 +61,8 @@ export default function codeMirror5Plugin(context: PluginContext, CodeMirror: an
 						selectionEnd.ch += 1 + note.title.length;
 						cm.setSelection(selectionStart, selectionEnd)
 					}
+					await context.postMessage(
+						{command: 'appendLink', targetNoteId: note.id});	
 				},
 			};
 			if (response.showFolders) {
@@ -86,11 +90,11 @@ export default function codeMirror5Plugin(context: PluginContext, CodeMirror: an
 		return hints;
 	}
 
-	CodeMirror.defineOption('quickLinks', false, function(cm, value, prev) {
+	CodeMirror.defineOption('bidirectionalLinks', false, function(cm, value, prev) {
 		if (!value) return;
 
 		cm.on('inputRead', async function (cm1, change) {
-			if (!cm1.state.completionActive && cm.getTokenAt(cm.getCursor()).string.startsWith('@@')) {
+			if (!cm1.state.completionActive && cm.getTokenAt(cm.getCursor()).string.startsWith(MAGIC_WORD)) {
 				const start = {line: change.from.line, ch: change.from.ch + 1};
 
 				const hint = function(cm, callback) {

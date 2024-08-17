@@ -16,7 +16,7 @@ module.exports = {
 				'addon/hint/show-hint',
 			],
 			codeMirrorOptions: {
-				'quickLinks': true,
+				'bidirectionalLinks': true,
 			},
 			assets: function() {
 				return [

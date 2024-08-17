@@ -160,7 +160,7 @@ joplin.plugins.register({
 		await joplin.contentScripts.register(
 			ContentScriptType.CodeMirrorPlugin,
 			'bidirectionalLinks',
-			'./BidirectionalLinksPlugin.js'
+			'./contentScript/index.js'
 		);
 
 		await joplin.contentScripts.onMessage('bidirectionalLinks', async (message: any) => {
