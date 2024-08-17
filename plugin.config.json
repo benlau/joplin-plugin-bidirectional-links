@@ -1,5 +1,5 @@
 {
 	"extraScripts": [
-		"BidirectionalLinksPlugin.ts"
+		"contentScript/index.ts"
 	]
 }
