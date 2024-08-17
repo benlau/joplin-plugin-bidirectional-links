@@ -13,6 +13,7 @@ import type { Extension } from '@codemirror/state';
 
 import { PluginContext } from './types';
 
+const MAGIC_WORD = '|||';
 
 export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirror: any) {
 	const { autocompletion, insertCompletionText } = require('@codemirror/autocomplete') as typeof CodeMirrorAutocompleteType;
@@ -20,18 +21,18 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 
 	const completeMarkdown = async (completionContext: CompletionContext): Promise<CompletionResult> => {
 		// Start completions on @@, match any characters that aren't in "()[]{};>,\n"
-		const prefix = completionContext.matchBefore(/[@][@][^()\[\]{};:>,\n]*/);
+		const prefix = completionContext.matchBefore(/[|][|][|][^()\[\]{};:>,\n]*/);
 		if (!prefix || (prefix.from === prefix.to && !completionContext.explicit)) {
 			return null;
 		}
 
-		const searchText = prefix.text.substring(2); // Remove @@s
+		const searchText = prefix.text.substring(MAGIC_WORD.length); // Remove @@s
 		const response = await pluginContext.postMessage({
 			command: 'getNotes',
 			prefix: searchText,
 		});
 
-		const createApplyCompletionFn = (noteTitle: string, noteId: string) => {
+		const createApplyCompletionFn = (noteTitle: string, noteId: string, appendLink: boolean = false) => {
 			return (view: EditorView, _completion: Completion, from: number, to: number) => {
 				const markdownLink = `[${noteTitle}](:/${noteId})`;
 
@@ -51,15 +52,18 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 						selection: EditorSelection.range(selStart, selEnd),
 					});
 				}
+				if (appendLink) {
+					pluginContext.postMessage(
+						{command: 'appendLink', targetNoteId: noteId});		
+				}
 			};
 		};
-
 
 		const notes = response.notes;
 		const completions: Completion[] = [];
 		for (const note of notes) {
 			completions.push({
-				apply: createApplyCompletionFn(note.title, note.id),
+				apply: createApplyCompletionFn(note.title, note.id, true),
 				label: note.title,
 				detail: response.showFolders ? `In ${note.folder ?? 'unknown'}` : undefined,
 			});
