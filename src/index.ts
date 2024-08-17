@@ -7,11 +7,13 @@ const SETTING_SHOW_FOLDERS = 'showFolders';
 const SETTING_ALLOW_NEW_NOTES = 'allowNewNotes';
 const SETTING_SELECT_TEXT = 'selectText';
 const SETTING_PREPEND_LINK = "prependLink";
+const SETTING_TARGET_LINK_PREFIX = "targetLinkPrefix";
 
 let showFolders = false;
 let allowNewNotes = false;
 let selectText = false;
 let prependLink = false;
+let targetPrefix = "";
 let folders = {};
 
 async function onShowFolderSettingChanged() {
@@ -31,6 +33,10 @@ async function onSelectTextSettingChanged() {
 
 async function onPrependLinkSettingChanged() {
 	prependLink = await joplin.settings.value(SETTING_PREPEND_LINK)
+}
+
+async function onTargetLinkPrefixChanged() {
+	targetPrefix = await joplin.settings.value(SETTING_TARGET_LINK_PREFIX);
 }
 
 async function refreshFolderList() {
@@ -111,6 +117,13 @@ async function initSettings() {
 			type: SettingItemType.Bool,
 			value: prependLink,
 			label: 'Prepend link instead of append',
+		},
+		[SETTING_TARGET_LINK_PREFIX]: {
+			public: true,
+			section: SECTION,
+			type: SettingItemType.String,
+			value: "",
+			label: 'Target Link Prefix',
 		}
 	});
 
@@ -120,6 +133,7 @@ async function initSettings() {
 	await onAllowNewNotesSettingChanged();
 	await onSelectTextSettingChanged();
 	await onPrependLinkSettingChanged(); 
+	await onTargetLinkPrefixChanged();
 
 	await joplin.settings.onChange(change => {
 		const showFoldersIdx = change.keys.indexOf(SETTING_SHOW_FOLDERS);
@@ -138,6 +152,10 @@ async function initSettings() {
 		if (prependLinkIdx >= 0) {
 			onPrependLinkSettingChanged();
 		}
+		const targetPrefixIdx = change.keys.indexOf(SETTING_TARGET_LINK_PREFIX);
+		if (targetPrefixIdx >= 0) {
+			onTargetLinkPrefixChanged();
+		}
 	});
 }
 
@@ -148,7 +166,9 @@ async function insertLink(targetNoteId: string) {
 		fields: ["id", "body"],
 	});
 
-	const link = `[${activeNote.title}](:/${activeNote.id})`;
+	const prefix = targetPrefix.trim().length === 0 ? "" : targetPrefix;
+
+	const link = `${prefix}[${activeNote.title}](:/${activeNote.id})`;
 	const newBody = prependLink ? link + "\n" + note.body : note.body + "\n" + link;
 	await joplin.data.put(['notes', targetNoteId], null, {body: newBody});
 }
